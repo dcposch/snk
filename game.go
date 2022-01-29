@@ -11,6 +11,8 @@ func (a Vec) Plus(b Vec) Vec {
 	return Vec{a[0] + b[0], a[1] + b[1]}
 }
 
+// SnakeGame stores the state of the board and current score.
+// Implements the rules. Not responsible for moves, UI, or input handling.
 type SnakeGame struct {
 	width, height int
 	snake         []Vec
@@ -38,12 +40,14 @@ func CreateSnakeGame(width, height int) *SnakeGame {
 	}
 
 	for i := range food {
-		food[i] = ret.placeFood()
+		food[i] = ret.placeRandomFood()
 	}
 
 	return ret
 }
 
+// SetVel sets the new snake velocity.
+// The only allowed directions are up, down, left, and right.
 func (game *SnakeGame) SetVel(vel Vec) {
 	if vel.Plus(game.vel) == (Vec{0, 0}) {
 		return // ignore direction reversal
@@ -51,6 +55,7 @@ func (game *SnakeGame) SetVel(vel Vec) {
 	game.vel = vel
 }
 
+// Step advances the game by one step. Moves the snake, etc.
 func (game *SnakeGame) Step() {
 	if game.isOver {
 		return
@@ -81,17 +86,18 @@ func (game *SnakeGame) Step() {
 		// append tip to snake
 		game.snake = append(game.snake, nt)
 		// eat the food, place new food at random location
-		game.food[foodIndex] = game.placeFood()
+		game.food[foodIndex] = game.placeRandomFood()
 		// incrmeent score
 		game.score++
 	}
 }
 
+// Gets the current game tick speed. The game speeds up as the score increases.
 func (game *SnakeGame) GetTickDuration() time.Duration {
 	return time.Second * 3 / time.Duration(10+game.score/3)
 }
 
-func (game *SnakeGame) placeFood() (ret Vec) {
+func (game *SnakeGame) placeRandomFood() (ret Vec) {
 	for {
 		ret[0] = rand.Int() % game.width
 		ret[1] = rand.Int() % game.height
