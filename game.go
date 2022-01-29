@@ -5,6 +5,7 @@ import (
 	"time"
 )
 
+// Vec is a basic (x,y) int vector. Supports addition and ==
 type Vec [2]int
 
 func (a Vec) Plus(b Vec) Vec {
@@ -12,23 +13,25 @@ func (a Vec) Plus(b Vec) Vec {
 }
 
 // SnakeGame stores the state of the board and current score.
-// Implements the rules. Not responsible for moves, UI, or input handling.
+// Implements the rules. Not responsible for user input or output.
 type SnakeGame struct {
 	width, height int
 	snake         []Vec
 	food          []Vec
-	vel           Vec
+	vel           Vec // snake velocity: up, down, left, or right
 	isOver        bool
 	score         int
 }
 
 func CreateSnakeGame(width, height int) *SnakeGame {
+	// snake tail starts at 0,0, with the snake moving down
 	snake := make([]Vec, 4)
 	for i := 0; i < len(snake); i++ {
 		snake[i] = Vec{0, i}
 	}
 	vel := Vec{0, 1}
 
+	// place random food pieces, not overlapping each other or the snake
 	food := make([]Vec, 2)
 
 	ret := &SnakeGame{
@@ -46,8 +49,8 @@ func CreateSnakeGame(width, height int) *SnakeGame {
 	return ret
 }
 
-// SetVel sets the new snake velocity.
-// The only allowed directions are up, down, left, and right.
+// SetVel sets the new snake velocity, in squares per tick.
+// The only allowed directions are up, down (0, 1), left, and right (1, 0).
 func (game *SnakeGame) SetVel(vel Vec) {
 	if vel.Plus(game.vel) == (Vec{0, 0}) {
 		return // ignore direction reversal

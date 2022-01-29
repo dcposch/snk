@@ -13,8 +13,8 @@ var (
 	styleSnake    = styleBG.Background(tcell.ColorLightGreen)
 	styleFood     = styleBG.Background(tcell.ColorTeal)
 	styleGameOver = styleBold.Background(tcell.ColorGray).Foreground(tcell.ColorWhite)
-	gw            = 13
-	gh            = 13
+	gw            = 13 // game width
+	gh            = 13 // game height
 )
 
 func main() {
@@ -59,7 +59,12 @@ func main() {
 				moveQ = moveQ[:len(moveQ)-1]
 			}
 			// next, advance the game by one turn
+			score, isOver := game.score, game.isOver
 			game.Step()
+			// beep when something happens
+			if game.score != score || game.isOver != isOver {
+				s.Beep()
+			}
 			// speed up the game tick as the score increases
 			ticker.Reset(game.GetTickDuration())
 
@@ -72,7 +77,7 @@ func main() {
 				switch e.Key() {
 				case tcell.KeyEsc:
 				case tcell.KeyCtrlC:
-					// exit
+					// exit. call s.Fini to return terminal to its normal state.
 					s.Fini()
 					return
 				default:
@@ -84,6 +89,7 @@ func main() {
 	}
 }
 
+// Gets the new snake velocity from WASD and arrow keys.
 func getMove(e *tcell.EventKey) Vec {
 	switch e.Key() {
 	case tcell.KeyUp:
@@ -109,6 +115,7 @@ func getMove(e *tcell.EventKey) Vec {
 	return Vec{0, 0}
 }
 
+// Draws a box around the game board
 func drawFrame(s tcell.Screen) {
 	ox, oy := getCenterOffset(s)
 	for i := 0; i < gw*2+1; i++ {
@@ -125,12 +132,14 @@ func drawFrame(s tcell.Screen) {
 	s.SetContent(ox+gw*2+1, oy+gh+2, '+', nil, styleBG)
 }
 
+// Draws SCORE ... XYZ below the game board
 func drawScore(s tcell.Screen, score int) {
 	ox, oy := getCenterOffset(s)
 	setText(s, ox+gw*2-5, oy+gh+3, fmt.Sprintf("%06d", score), styleBold)
 	setText(s, ox+1, oy+gh+3, "SCORE", styleBold)
 }
 
+// Draws the game board: snake, food, GAME OVER banner
 func drawGame(s tcell.Screen, game *SnakeGame) {
 	ox, oy := getCenterOffset(s)
 
@@ -152,6 +161,7 @@ func drawGame(s tcell.Screen, game *SnakeGame) {
 	}
 }
 
+// Gets the offset to center the game board in the terminal.
 func getCenterOffset(s tcell.Screen) (ox, oy int) {
 	sx, sy := s.Size()
 	ox = sx/2 - gw
